@@ -1,0 +1,25 @@
+{
+  "name": "weekly-menu-generator-bot",
+  "version": "1.0.0",
+  "description": "Weekly menu generator Telegram bot",
+  "main": "bot.js",
+  "scripts": {
+    "bot": "npx ts-node bot.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AntonShukanau/weekly-menu-generator-bot.git"
+  },
+  "author": "Anton Shukanau",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AntonShukanau/weekly-menu-generator-bot/issues"
+  },
+  "homepage": "https://github.com/AntonShukanau/weekly-menu-generator-bot#readme",
+  "dependencies": {
+    "@types/node-telegram-bot-api": "^0.64.11",
+    "dotenv": "^17.2.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "typescript": "^5.9.2"
+  }
+}
