@@ -1,15 +1,15 @@
 import { breakfasts, dinners } from "./dishes.ts";
+import { menuLocales } from "./locales.ts";
 
-const generator = (array: Array<any>) => array[Math.floor(Math.random() * array.length)];
+const generator = (array: string[]) => array[Math.floor(Math.random() * array.length)];
 
-export default function createWeeklyMenu (): string {
-  const monday = `Monday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
-  const tuesday = `Tuesday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
-  const wednesday = `Wednesday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
-  const thursday = `Thursday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
-  const friday = `Friday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
-  const saturday = `Saturday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
-  const sunday = `Sunday:\n Breakfast: ${generator(breakfasts)}\n Dinner: ${generator(dinners)}\n\n`;
+export default function createWeeklyMenu(language: "en" | "ru" | "uk" = "en"): string {
+  const locale = menuLocales[language];
+  const breakfastOptions = breakfasts[language];
+  const dinnerOptions = dinners[language];
 
-  return monday + tuesday + wednesday + thursday + friday + saturday + sunday;
-};
+  const menu = locale.days.map((day) => {
+    return `${day}:\n ${locale.breakfast}: ${generator(breakfastOptions)}\n ${locale.dinner}: ${generator(dinnerOptions)}\n`;
+  });
+  return menu.join("\n");
+}

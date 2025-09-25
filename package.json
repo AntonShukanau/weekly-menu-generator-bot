@@ -4,7 +4,7 @@
   "description": "Weekly menu generator Telegram bot",
   "main": "bot.js",
   "scripts": {
-    "bot": "npx ts-node bot.ts"
+    "bot": "npx ts-node ./src/index.ts"
   },
   "repository": {
     "type": "git",
