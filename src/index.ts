@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import TelegramBot, { Message, CallbackQuery } from 'node-telegram-bot-api';
 import createWeeklyMenu from './menuGenerator.ts';
-import { welcomeMessages, helpMessages, errorMessages } from './locales.ts';
+import { welcomeMessages, helpMessages, errorMessages, successMessages, menuLocales } from './locales.ts';
 
 const token = process.env.BOT_TOKEN;
 if (!token) throw new Error('BOT_TOKEN is required');
@@ -14,22 +14,40 @@ bot.setMyCommands([
   { command: '/menu', description: 'Generate your weekly menu' },
 ]);
 
-const getUserLanguage = (msg: Message): "en" | "ru" | "uk" => {
-  const languageCode = msg.from?.language_code || "en";
-  console.log("Detected language code:", languageCode);
-  if (languageCode.startsWith("ru")) return "ru";
-  if (languageCode.startsWith("uk")) return "uk";
-  return "en";
+const userLanguages = new Map<number, "en" | "ru" | "uk">();
+
+const getUserLanguage = (msgOrChatId: Message | number): "en" | "ru" | "uk" => {
+  const chatId = typeof msgOrChatId === 'number' ? msgOrChatId : msgOrChatId.chat.id;
+
+  if (userLanguages.has(chatId)) {
+    return userLanguages.get(chatId)!;
+  }
+
+  const msg = typeof msgOrChatId === 'number' ? null : msgOrChatId;
+  const languageCode = msg?.from?.language_code || 'en';
+
+  let language: "en" | "ru" | "uk" = 'en';
+  if (languageCode.startsWith('ru')) language = 'ru';
+  if (languageCode.startsWith('uk')) language = 'uk';
+
+  userLanguages.set(chatId, language);
+  console.log(`Saved language for user ${chatId}: ${language}`);
+  return language;
+};
+
+const handleError = (chatId: number, language: "en" | "ru" | "uk", errorType: keyof typeof errorMessages) => {
+  bot.sendMessage(chatId, errorMessages[errorType][language]);
 };
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const language = getUserLanguage(msg);
+  console.log(language)
 
   bot.sendMessage(chatId, welcomeMessages[language], {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "Generate Weekly Menu 🍴", callback_data: "generate_menu" }],
+        [{ text: menuLocales[language].button, callback_data: "generate_menu" }],
       ],
     },
   });
@@ -37,44 +55,45 @@ bot.onText(/\/start/, (msg) => {
 
 bot.onText(/\/menu/, (msg) => {
   const chatId = msg.chat.id;
-  const language = getUserLanguage(msg);
+  const language = getUserLanguage(chatId);
 
   try {
     const menu = createWeeklyMenu(language);
     bot.sendMessage(chatId, menu);
   } catch (error) {
     console.error("Error generating menu:", error);
-    bot.sendMessage(chatId, errorMessages.menu[language]);
+    handleError(chatId, language, "menu");
   }
 });
 
 bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
-  const language = getUserLanguage(msg);
+  const language = getUserLanguage(chatId);
 
   bot.sendMessage(chatId, helpMessages[language]);
 });
 
 bot.on('callback_query', (query: CallbackQuery) => {
-  const chatId = query.message?.chat.id;
+  const chatId = query.message?.chat.id!;
+  const language = getUserLanguage(chatId);
 
-  if (!query.data || !chatId) {
-    bot.answerCallbackQuery(query.id, { text: "❌ Invalid action." });
+  if (!query.data) {
+    bot.answerCallbackQuery(query.id, { text: errorMessages.global[language] });
     return;
   }
 
   if (query.data === "generate_menu") {
-    const language = getUserLanguage(query.message as Message);
-
     try {
       const menu = createWeeklyMenu(language);
       bot.sendMessage(chatId, menu);
-      bot.answerCallbackQuery(query.id, { text: "✅ Menu generated successfully!" });
+      bot.answerCallbackQuery(query.id, { text: successMessages.tooltip[language] });
     } catch (error) {
       console.error("Error generating menu:", error);
-      bot.sendMessage(chatId, "❌ Error generating menu. Please try again.");
-      bot.answerCallbackQuery(query.id, { text: "❌ Failed to generate menu." });
+      handleError(chatId, language, "menu");
+      bot.answerCallbackQuery(query.id, { text: errorMessages.tooltip[language] });
     }
+  } else {
+    bot.answerCallbackQuery(query.id, { text: errorMessages.global[language] });
   }
 });
 

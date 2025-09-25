@@ -9,7 +9,11 @@ export default function createWeeklyMenu(language: "en" | "ru" | "uk" = "en"): s
   const dinnerOptions = dinners[language];
 
   const menu = locale.days.map((day) => {
-    return `${day}:\n ${locale.breakfast}: ${generator(breakfastOptions)}\n ${locale.dinner}: ${generator(dinnerOptions)}\n`;
+    const breakfast = generator(breakfastOptions);
+    const dinner = generator(dinnerOptions);
+
+    return `📅 ${day}:\n🍳 ${locale.breakfast}: ${breakfast}\n🍽️ ${locale.dinner}: ${dinner}`;
   });
-  return menu.join("\n");
+
+  return `✨ ${locale.title} ✨\n\n${menu.join("\n\n")} \n\n`;
 }
